@@ -1,0 +1,36 @@
+<!-- from leaflet starters page -->
+{% extends 'base.html' %}
+{% block content %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<h2>Local Popularity Map</h2>
+<div id="map" style="height: 400px"></div>
+{% for r in template_data.regions %}
+  <div class="region-panel" id="panel-{{ r.code }}"{% if r.code != template_data.selected %} hidden{% endif %}>
+    <h3>{{ r.name }}</h3>
+    <ol>
+      {% for movie in r.top %}
+        <li>{{ movie.movie__name }} ({{ movie.units }} bought)</li>
+        {% empty %}
+        <li>No data available</li>
+      {% endfor %}
+    </ol>
+  </div>
+{% endfor %}
+{{ template_data.markers|json_script:"markers" }}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const markers = JSON.parse(document.getElementById("markers").textContent);
+    const map = L.map("map").setView([39.8, -98.6], 4);
+
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        referrerPolicy: "strict-origin-when-cross-origin",
+    }).addTo(map);
+
+    markers.forEach((m) => {
+        L.marker([m.lat, m.lng]).addTo(map).on("click", () => {
+            document.querySelectorAll(".region-panel").forEach(p => p.hidden = p.id !== "panel-" + m.code);
+        });
+    });
+  </script>
+
+{% endblock content %}
