@@ -29,6 +29,28 @@
             </div>
           </form>
         </p>
+        {% if user.is_authenticated %}
+        <form method="post" action="{% url 'movies.rate_movie' id=template_data.movie.id %}">
+          <!--Claude pointed out id is the same as one for cart add so i used that-->
+          {% csrf_token %}
+          {% for star in template_data.stars %}
+          <button type="submit" name="value" value="{{ star }}" class="border-0">
+            {% if star <= template_data.my_rating %}
+            &#9733;
+            {% else %}
+            &#9734;
+            {% endif %}
+          </button> <!-- code for button style from here https://getbootstrap.com/docs/5.3/components/buttons/-->
+          {% endfor %}
+        </form>
+        {% endif %}
+        {% if template_data.average_rating == None %}
+        <span>No ratings done yet</span>
+        <!--Claude told me the general <span></span> structure for text-->
+        {% else %}
+        <b>Average: </b>{{template_data.average_rating| floatformat:1}}
+        <!-- Claude told me about the filter floatformat:1-->
+        {% endif %}
         <h2>Reviews</h2>
         <hr />
         <ul class="list-group">

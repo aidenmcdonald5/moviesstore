@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.validators import MinValueValidator, MaxValueValidator 
+##“field type and import identified with help from Claude (Anthropic), Oct 10, 2026; see Django docs”.
 
 # Create your models here.
 class Movie(models.Model):
@@ -17,5 +19,13 @@ class Review(models.Model):
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     reported = models.BooleanField(default = False)
+    def __str__(self):
+        return str(self.id) + ' - ' + self.movie.name
+class Rating(models.Model):
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='ratings')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    value = models.PositiveSmallIntegerField(validators=[MinValueValidator(1),MaxValueValidator(5)])
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['user','movie'], name='unique_rating')]
     def __str__(self):
         return str(self.id) + ' - ' + self.movie.name
