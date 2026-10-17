@@ -1,12 +1,13 @@
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404, redirect
-from movies.models import Movie
+from movies.models import Movie, Review
 from .utils import calculate_cart_total
 from .models import Order, Item
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.db.models import Sum, Value
+from django.db.models import Sum, Value, Count
 from django.db.models.functions import Coalesce
+
 
 # Create your views here.
 def index(request):
@@ -74,8 +75,17 @@ def user_engagement(request):
                 users = users[:size_int]
         except ValueError:
             pass
+
+    top_commenter = (
+        User.objects
+        .annotate(comment_count=Coalesce(Count('review'), Value(0)))
+        .order_by('-comment_count', 'username')
+        .first()
+    )   
+
     template_data = {}
     template_data['title'] = 'User Engagement'
     template_data['users'] = users
     template_data['size'] = size
+    template_data['top_commenter'] = top_commenter
     return render(request, 'cart/user_engagement.html', {'template_data': template_data})
