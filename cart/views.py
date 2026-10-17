@@ -5,9 +5,13 @@ from .utils import calculate_cart_total
 from .models import Order, Item
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+
 from django.db.models import Sum, Value, Count
 from django.db.models.functions import Coalesce
 
+
+
+from django.contrib.admin.views.decorators import staff_member_required
 
 # Create your views here.
 def index(request):
@@ -58,6 +62,7 @@ def purchase(request):
     template_data['title'] = 'Purchase confirmation'
     template_data['order_id'] = order.id
     return render(request, 'cart/purchase.html', {'template_data': template_data})
+
 @login_required
 def user_engagement(request):
     if not request.user.is_staff:
@@ -89,3 +94,32 @@ def user_engagement(request):
     template_data['size'] = size
     template_data['top_commenter'] = top_commenter
     return render(request, 'cart/user_engagement.html', {'template_data': template_data})
+
+
+@staff_member_required
+def top_buyer(request):
+    user_p_count = {}
+    for order in Order.objects.all():
+        username = User.objects.get(pk=order.user_id)
+        for item in order.item_set.all():
+            if username not in user_p_count:
+                user_p_count[username] = item.quantity
+            else:
+                user_p_count[username] += item.quantity
+    biggest = None
+    biggest_user = None
+    for key in user_p_count:
+        if biggest is not None:
+            if user_p_count[key] > biggest:
+                biggest = user_p_count[key]
+                biggest_user = key.username
+        else:
+            biggest = user_p_count[key]
+            biggest_user = key.username
+    # now we can display this in html
+    template_data = {}
+    template_data['title'] = 'Top Buyer Info'
+    template_data['biggest'] = biggest
+    template_data['biggest_user'] = biggest_user
+    return render(request, 'cart/top_buyer.html', {'template_data': template_data})
+
